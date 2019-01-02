@@ -1,8 +1,47 @@
 #libraries
 import urllib.request as url
+import difflib
 from bs4 import BeautifulSoup as bs
 
-def scrape(subreddit, flairname):
+siteUrl = 'https://reddit.com'
+
+def matchWords(keywords, title):
+    score = 0
+    if title is None: return 0
+    titleWords = title.text.split(' ')
+    for x in keywords:
+        if(len(difflib.get_close_matches(x, titleWords)) > 0):
+            score = score + 1
+    return score
+
+def printEach(flair, title, link):
+    if flair is not None: print(flair.text)
+    if title is not None: print(title.text)
+    if link is not None: print(siteUrl+link['href'])
+    print('\n')
+
+def printStuff(flairname, flair, keywords, title, link):
+    if flairname is not '':
+        if keywords == ['']:
+            if flair is not None and flair.text == flairname:
+                printEach(flair, title, link)
+        else:
+            matchScore = matchWords(keywords, title)
+            if matchScore > 0 and flair is not None and flair.text == flairname:
+                printEach(flair, title, link)
+                   
+    else:
+        if keywords == ['']:
+            printEach(flair, title, link)
+        else:
+            matchScore = matchWords(keywords, title)
+            if matchScore > 0:
+                printEach(flair, title, link)
+            
+
+def scrape(subreddit, flairname, keywords):
+    if subreddit is '':
+        return False
     siteUrl = 'https://reddit.com'
     pageUrl = siteUrl + '/r/' + subreddit
     page = url.urlopen(pageUrl)
@@ -22,22 +61,12 @@ def scrape(subreddit, flairname):
         title = div.find('h2', attrs={'class': ' '.join(titleClass)})
         link = div.find('a', attrs={'class': ' '.join(linkClass)})
 
-        if flairname is not '':
-            if flair.text == flairname:
-                if flair is not None: print(flair.text)
-                if title is not None: print(title.text)
-                if link is not None: print(siteUrl+link['href'])
-                print('\n')
-        
-        else:
-            if flair is not None: print(flair.text)
-            if title is not None: print(title.text)
-            if link is not None: print(siteUrl+link['href'])
-            print('\n')
+        printStuff(flairname, flair, keywords, title, link)
 
 
 
 subreddit = input('subreddit: ')
 flairname = input('flair: ')
+keywords = input('enter space separated keywords: ').split(' ')
 
-scrape(subreddit, flairname)
+scrape(subreddit, flairname, keywords)
