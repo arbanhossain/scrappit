@@ -1,4 +1,5 @@
 #libraries
+import os
 import urllib.request as url
 import difflib
 from bs4 import BeautifulSoup as bs
@@ -29,7 +30,7 @@ def printStuff(flairname, flair, keywords, title, link):
             matchScore = matchWords(keywords, title)
             if matchScore > 0 and flair is not None and flair.text == flairname:
                 printEach(flair, title, link)
-                   
+
     else:
         if keywords == ['']:
             printEach(flair, title, link)
@@ -37,14 +38,19 @@ def printStuff(flairname, flair, keywords, title, link):
             matchScore = matchWords(keywords, title)
             if matchScore > 0:
                 printEach(flair, title, link)
-            
+
 
 def scrape(subreddit, flairname, keywords):
     if subreddit is '':
         return False
     siteUrl = 'https://reddit.com'
     pageUrl = siteUrl + '/r/' + subreddit
-    page = url.urlopen(pageUrl)
+    request = url.Request(pageUrl)
+
+    userAgent = os.getenv('USERAGENT', default='Mozilla/5.0')
+    request.add_header('User-Agent', userAgent)
+
+    page = url.urlopen(request).read()
 
     divClass = ['scrollerItem']
     titleClass = ['imors3-0', 'iuScIP']
