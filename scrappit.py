@@ -31,15 +31,21 @@ def printEach(flair, title, link):
 
 def printStuff(flairname, flair, keywords, title, link):
     if keywords == ['']:
-        printEach(flair, title, link)
-    elif flairname is not '':
-        matchScore = matchWords(keywords, title)
-        if matchScore > 0 and flair is not None and flair.text == flairname:
+        if flairname is not '':
+            if flair is not None and flair.text == flairname:
+                printEach(flair, title, link)
+        else:
             printEach(flair, title, link)
     else:
-        matchScore = matchWords(keywords, title)
-        if matchScore > 0:
-            printEach(flair, title, link)
+        if flairname is not '':
+            if flair is not None and flair.text == flairname:
+                matchScore = matchWords(keywords, title)
+                if matchScore > 0:
+                    printEach(flair, title, link)
+        else:
+            matchScore = matchWords(keywords, title)
+            if matchScore > 0:
+                printEach(flair, title, link)
 
 
 def scrape(subreddit, flairname, keywords):
@@ -78,9 +84,9 @@ if __name__ == '__main__':
                         help='the subreddit to search in')
     parser.add_argument('-f', '--flair', default='',
                         help='name of the flair (optional)')
-    parser.add_argument('-k', '--keywords', nargs='*',
+    parser.add_argument('-k', '--keywords', nargs='*', default=[''],
                         help='keywords to search for')
 
     args = parser.parse_args()
 
-    scrape(args.subreddit, args.flair, args.keywords)
+scrape(args.subreddit, args.flair, args.keywords)
