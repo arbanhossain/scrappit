@@ -79,7 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--flair', default='',
                         help='name of the flair (optional)')
     parser.add_argument('-k', '--keywords', nargs='*',
-                        help='keywords (has to be greater than one)')
+                        help='keywords to search for')
 
     args = parser.parse_args()
 
