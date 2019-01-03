@@ -1,4 +1,6 @@
+import sys
 import os
+from argparse import ArgumentParser
 import urllib.request as url
 import difflib
 from bs4 import BeautifulSoup as bs
@@ -28,33 +30,29 @@ def printEach(flair, title, link):
 
 
 def printStuff(flairname, flair, keywords, title, link):
-    if flairname is not '':
-        if keywords == ['']:
-            if flair is not None and flair.text == flairname:
-                printEach(flair, title, link)
-        else:
-            matchScore = matchWords(keywords, title)
-            if matchScore > 0 and flair is not None and flair.text == flairname:
-                printEach(flair, title, link)
-
-    else:
-        if keywords == ['']:
+    if keywords == ['']:
+        printEach(flair, title, link)
+    elif flairname is not '':
+        matchScore = matchWords(keywords, title)
+        if matchScore > 0 and flair is not None and flair.text == flairname:
             printEach(flair, title, link)
-        else:
-            matchScore = matchWords(keywords, title)
-            if matchScore > 0:
-                printEach(flair, title, link)
+    else:
+        matchScore = matchWords(keywords, title)
+        if matchScore > 0:
+            printEach(flair, title, link)
 
 
 def scrape(subreddit, flairname, keywords):
-    if subreddit is '':
-        return False
     pageUrl = SITEURL + '/r/' + subreddit
     request = url.Request(pageUrl)
     userAgent = os.getenv('USERAGENT', default='Mozilla/5.0')
     request.add_header('User-Agent', userAgent)
 
-    page = url.urlopen(request).read()
+    try:
+        page = url.urlopen(request).read()
+    except Exception as e:
+        print(e)
+        sys.exit()
 
     divClass = ['scrollerItem']
     titleClass = ['imors3-0', 'iuScIP']
@@ -64,19 +62,25 @@ def scrape(subreddit, flairname, keywords):
     soup = bs(page, 'html.parser')
     divs = soup.find_all('div', attrs={'class': ' '.join(divClass)})
 
-    length = len(divs)
-
     for div in divs:
         flair = div.find('span', attrs={'class': ' '.join(flairClass)})
         title = div.find('h2', attrs={'class': ' '.join(titleClass)})
         link = div.find('a', attrs={'class': ' '.join(linkClass)})
-
         printStuff(flairname, flair, keywords, title, link)
 
 
 if __name__ == '__main__':
-    subreddit = input('subreddit: ')
-    flairname = input('flair: ')
-    keywords = input('enter space separated keywords: ').split(' ')
+    parser = ArgumentParser(
+                description='Scrape a subreddit and search for keyword',
+            )
 
-    scrape(subreddit, flairname, keywords)
+    parser.add_argument('subreddit',
+                        help='the subreddit to search in')
+    parser.add_argument('-f', '--flair', default='',
+                        help='name of the flair (optional)')
+    parser.add_argument('-k', '--keywords', nargs='*',
+                        help='keywords (has to be greater than one)')
+
+    args = parser.parse_args()
+
+    scrape(args.subreddit, args.flair, args.keywords)
